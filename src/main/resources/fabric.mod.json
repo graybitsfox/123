@@ -20,6 +20,9 @@
   "entrypoints": {
     "main": [
       "com.example.intelligentnpc.IntelligentNPCMod"
+    ],
+    "client": [
+      "com.example.intelligentnpc.client.IntelligentNPCModClient"
     ]
   },
   "mixins": [
