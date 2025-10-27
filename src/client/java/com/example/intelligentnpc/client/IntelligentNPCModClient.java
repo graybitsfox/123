@@ -12,6 +12,6 @@ public class IntelligentNPCModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         // Регистрируем рендерер для нашего типа NPC
-        EntityRendererRegistry.register(NPCManager.NPC_ENTITY_TYPE, NPCRenderer::new);
+        EntityRendererRegistry.register(NPCManager.NPC_ENTITY_TYPE, IntelligentNPCRenderer::new);
     }
 }

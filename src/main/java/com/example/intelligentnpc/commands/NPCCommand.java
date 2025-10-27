@@ -428,40 +428,45 @@ public class NPCCommand {
         }
     }
     
-    private static boolean assignTaskToNPC(NPCEntity npc, String task, String params) {
-        switch (task.toLowerCase()) {
-            case "build", "строить" -> {
+    private static boolean assignTaskToNPC(NPCEntity npc, String taskName, String params) {
+        com.example.intelligentnpc.npc.TaskType taskType = com.example.intelligentnpc.npc.TaskType.fromString(taskName);
+        if (taskType == null) {
+            return false;
+        }
+
+        switch (taskType) {
+            case BUILD -> {
                 npc.getNPCBrain().setGoal("building");
                 if (!params.isEmpty()) {
                     // TODO: Парсинг параметров строительства
                 }
                 return true;
             }
-            case "trade", "торговать" -> {
+            case TRADE -> {
                 npc.getNPCBrain().setGoal("trading");
                 return true;
             }
-            case "guard", "охранять" -> {
+            case GUARD -> {
                 npc.getNPCBrain().setGoal("guard");
                 return true;
             }
-            case "follow", "следовать" -> {
+            case FOLLOW -> {
                 npc.getNPCBrain().setGoal("follow_player");
                 return true;
             }
-            case "stay", "стоять" -> {
+            case STAY -> {
                 npc.getNPCBrain().setGoal("stay");
                 return true;
             }
-            case "explore", "исследовать" -> {
+            case EXPLORE -> {
                 npc.getNPCBrain().setGoal("explore");
                 return true;
             }
-            case "rest", "отдыхать" -> {
+            case REST -> {
                 npc.getNPCBrain().setGoal("rest");
                 return true;
             }
-            case "learn", "учиться" -> {
+            case LEARN -> {
                 npc.getNPCBrain().setGoal("learn");
                 if (!params.isEmpty()) {
                     npc.getLearningAI().setCurrentLearningFocus(params);

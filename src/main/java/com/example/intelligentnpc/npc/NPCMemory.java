@@ -26,6 +26,7 @@ public class NPCMemory {
     private final List<String> learnedPatterns = Collections.synchronizedList(new ArrayList<>());
     private final Map<String, Object> personalityTraits = new ConcurrentHashMap<>();
     private final List<DangerRecord> dangerEncounters = Collections.synchronizedList(new ArrayList<>());
+    private final List<String> taskQueue = Collections.synchronizedList(new ArrayList<>());
     
     // Настройки памяти
     private static final int MAX_EXPERIENCES = 1000;
@@ -257,6 +258,16 @@ public class NPCMemory {
             .filter(d -> d.getDangerType().equals(dangerType))
             .toList();
     }
+
+    // Задачи
+    public List<String> getTaskQueue() {
+        return new ArrayList<>(taskQueue);
+    }
+
+    public void setTaskQueue(List<String> tasks) {
+        taskQueue.clear();
+        taskQueue.addAll(tasks);
+    }
     
     // Сохранение и загрузка
     public void saveToFile(NPCEntity npc) {
@@ -320,6 +331,11 @@ public class NPCMemory {
             JsonArray dangersJson = new JsonArray();
             dangerEncounters.forEach(danger -> dangersJson.add(danger.toJson()));
             memoryData.add("danger_encounters", dangersJson);
+
+            // Очередь задач
+            JsonArray tasksJson = new JsonArray();
+            taskQueue.forEach(tasksJson::add);
+            memoryData.add("task_queue", tasksJson);
             
             // Запись в файл
             try (FileWriter writer = new FileWriter(memoryFile, StandardCharsets.UTF_8)) {
@@ -412,6 +428,12 @@ public class NPCMemory {
                     DangerRecord danger = DangerRecord.fromJson(elem.getAsJsonObject());
                     dangerEncounters.add(danger);
                 });
+            }
+
+            // Загрузка очереди задач
+            if (memoryData.has("task_queue")) {
+                JsonArray tasksJson = memoryData.getAsJsonArray("task_queue");
+                tasksJson.forEach(elem -> taskQueue.add(elem.getAsString()));
             }
             
             IntelligentNPCMod.LOGGER.debug("Loaded memory for NPC {} from {}", npcName, memoryFile.getPath());

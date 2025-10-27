@@ -12,8 +12,11 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -53,7 +56,8 @@ public class NPCEntity extends PathAwareEntity {
     private static final long LLM_UPDATE_INTERVAL = 3000; // 3 секунды
     private int ticksSinceLastAction = 0;
     private boolean isProcessingLLMResponse = false;
-    
+    private final SimpleInventory inventory = new SimpleInventory(27);
+
     // Конструкторы
     public NPCEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
@@ -367,9 +371,18 @@ public class NPCEntity extends PathAwareEntity {
     }
     
     private JsonObject getInventoryAsJson() {
-        // TODO: Реализовать инвентарь для NPC
-        JsonObject inventory = new JsonObject();
-        return inventory;
+        JsonObject inventoryJson = new JsonObject();
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (!stack.isEmpty()) {
+                inventoryJson.addProperty(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount());
+            }
+        }
+        return inventoryJson;
+    }
+
+    public SimpleInventory getInventory() {
+        return this.inventory;
     }
     
     private JsonObject getNearbyPlayersAsJson() {
@@ -455,6 +468,7 @@ public class NPCEntity extends PathAwareEntity {
         NbtCompound aiData = new NbtCompound();
         saveAIModulesToNbt(aiData);
         nbt.put("ai_modules", aiData);
+        nbt.put("Inventory", this.inventory.toNbtList(getWorld().getRegistryManager()));
     }
     
     @Override
@@ -479,6 +493,9 @@ public class NPCEntity extends PathAwareEntity {
         if (nbt.contains("ai_modules")) {
             loadAIModulesFromNbt(nbt.getCompound("ai_modules"));
         }
+        if (nbt.contains("Inventory", 9)) { // 9 is the NBT type for List
+            this.inventory.readNbtList(nbt.getList("Inventory", 10), getWorld().getRegistryManager()); // 10 is the NBT type for Compound
+        }
         
         // Обновление tracked data
         setNpcName(npcName);
@@ -494,6 +511,9 @@ public class NPCEntity extends PathAwareEntity {
     }
     
     public void saveToMemory() {
+        if (brain != null) {
+            brain.saveTasksToMemory();
+        }
         if (memory != null) {
             memory.saveToFile(this);
         }

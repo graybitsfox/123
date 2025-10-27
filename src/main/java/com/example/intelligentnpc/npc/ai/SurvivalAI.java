@@ -65,6 +65,7 @@ public class SurvivalAI {
     public void registerGoals(GoalSelector goalSelector) {
         goalSelector.add(0, new AvoidLavaGoal());
         goalSelector.add(0, new ExtinguishFireGoal());
+        goalSelector.add(1, new FleeEntityGoal<>(npc, HostileEntity.class, 8.0f, 1.0, 1.2));
         goalSelector.add(1, new AvoidCreeperGoal());
         goalSelector.add(1, new FleeFromDangerGoal());
         goalSelector.add(2, new SeekShelterGoal());

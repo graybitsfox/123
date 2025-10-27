@@ -43,7 +43,31 @@ public class NPCBrain {
         this.llmClient = new LLMClient();
         
         initializeEmotions();
-        initializeDefaultBehavior();
+        loadTasksFromMemory();
+        if (taskQueue.isEmpty()) {
+            initializeDefaultBehavior();
+        }
+    }
+
+    private void loadTasksFromMemory() {
+        List<String> savedTasks = memory.getTaskQueue();
+        for (String taskType : savedTasks) {
+            // This is a simplified version. A real implementation would need a factory
+            // to reconstruct task objects from their type and parameters.
+            if ("rest".equals(taskType)) addTask(new RestTask());
+            if ("explore".equals(taskType)) addTask(new ExploreTask());
+        }
+    }
+
+    public void saveTasksToMemory() {
+        List<String> tasksToSave = new ArrayList<>();
+        for (BrainTask task : taskQueue) {
+            tasksToSave.add(task.getType());
+        }
+        if (currentTask != null) {
+            tasksToSave.add(currentTask.getType());
+        }
+        memory.setTaskQueue(tasksToSave);
     }
     
     private void initializeEmotions() {

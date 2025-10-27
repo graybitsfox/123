@@ -298,8 +298,10 @@ public class BuilderAI {
         BlockPos playerPos = player.getBlockPos();
         
         // Определение типа постройки
-        String structureType = "house"; // По умолчанию
-        if (lowerCommand.contains("башн") || lowerCommand.contains("tower")) {
+        String structureType = null;
+        if (lowerCommand.contains("дом") || lowerCommand.contains("house")) {
+            structureType = "house";
+        } else if (lowerCommand.contains("башн") || lowerCommand.contains("tower")) {
             structureType = "tower";
         } else if (lowerCommand.contains("мост") || lowerCommand.contains("bridge")) {
             structureType = "bridge";
@@ -309,6 +311,11 @@ public class BuilderAI {
             structureType = "farm";
         } else if (lowerCommand.contains("шахт") || lowerCommand.contains("mine")) {
             structureType = "mine_entrance";
+        }
+
+        if (structureType == null) {
+            npc.getChatAI().say("Что именно мне построить? Например: 'построй дом'.");
+            return null;
         }
         
         // Определение материала
