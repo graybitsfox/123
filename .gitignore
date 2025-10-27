@@ -1,0 +1,28 @@
+# Build outputs
+/build/
+/.gradle/
+
+# Gradle wrappers / distributions
+/gradle-*/
+gradle.zip
+
+# JDK distributions
+/jdk-*/
+*.tar.gz
+
+# Temporary and OS files
+*.DS_Store
+src.zip
+*.zip
+
+# IDE
+/.idea/
+
+# Misc
+/tmp/
+
+# Prevent committing large archives and compiled artifacts
+*.class
+*.jar
+*.war
+*.ear

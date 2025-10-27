@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "intelligentnpc",
+  "version": "${version}",
+
+  "name": "Intelligent NPCs",
+  "description": "Intelligent NPCs with LLM integration, memory, learning, building, and trading capabilities",
+  "authors": [
+    "IntelligentNPC Team"
+  ],
+  "contact": {
+    "homepage": "https://github.com/example/intelligentnpc",
+    "sources": "https://github.com/example/intelligentnpc"
+  },
+
+  "license": "MIT",
+  "icon": "assets/intelligentnpc/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.example.intelligentnpc.IntelligentNPCMod"
+    ]
+  },
+  "mixins": [
+    "intelligentnpc.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
+
