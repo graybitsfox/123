@@ -458,7 +458,7 @@ public class TeamAI {
         }
     }
     
-    private void formNewTeam(List<NPCEntity> candidates) {
+    public void formNewTeam() {
         teamLeader = null; // Мы становимся лидером
         timesLeader++;
         
@@ -466,6 +466,13 @@ public class TeamAI {
         teamMembers.add(npc.getUuid());
         memberRoles.put(npc.getUuid(), "leader");
         
+        memory.addExperience("teamwork", "Formed a new team");
+        npc.getChatAI().say("Создаю новую команду!");
+    }
+
+    private void formNewTeam(List<NPCEntity> candidates) {
+        formNewTeam();
+
         // Приглашаем других NPC
         int inviteCount = Math.min(candidates.size(), maxTeamSize - 1);
         for (int i = 0; i < inviteCount; i++) {
@@ -473,8 +480,7 @@ public class TeamAI {
             sendTeamInvitation(candidate);
         }
         
-        memory.addExperience("teamwork", String.format("Formed new team with %d members", inviteCount + 1));
-        npc.getChatAI().say("Создаю новую команду!");
+        memory.addExperience("teamwork", String.format("Invited %d members to the new team", inviteCount));
     }
     
     private void sendTeamInvitation(NPCEntity candidate) {
@@ -531,6 +537,40 @@ public class TeamAI {
             teamMembers.add(memberId);
             memberRoles.put(memberId, "member");
         }
+    }
+
+    public boolean addMember(NPCEntity member) {
+        if (!isTeamLeader() || teamMembers.size() >= maxTeamSize) {
+            return false;
+        }
+        teamMembers.add(member.getUuid());
+        member.getTeamAI().joinTeam(this.npc);
+        return true;
+    }
+
+    public void joinTeam(NPCEntity leader) {
+        this.teamLeader = leader.getUuid();
+    }
+
+    public void leaveTeam() {
+        if (isTeamLeader()) {
+            // Распускаем команду
+            broadcastTeamMessage("team_disbanded", "The team has been disbanded.");
+            teamMembers.clear();
+            memberRoles.clear();
+        } else {
+            // Покидаем команду
+            NPCEntity leader = findNPCById(teamLeader);
+            if (leader != null) {
+                leader.getTeamAI().removeMember(npc.getUuid());
+            }
+            this.teamLeader = null;
+        }
+    }
+
+    public void removeMember(UUID memberId) {
+        teamMembers.remove(memberId);
+        memberRoles.remove(memberId);
     }
     
     private void onTaskCompleted(TeamTask task) {

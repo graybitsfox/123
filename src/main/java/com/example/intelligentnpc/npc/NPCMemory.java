@@ -259,13 +259,27 @@ public class NPCMemory {
     }
     
     // Сохранение и загрузка
-    public void saveToFile() {
+    public void saveToFile(NPCEntity npc) {
         try {
             JsonObject memoryData = new JsonObject();
             
             // Основная информация
             memoryData.addProperty("npc_name", npcName);
             memoryData.addProperty("last_saved", LocalDateTime.now().format(TIME_FORMAT));
+
+            // Добавляем данные о сущности
+            memoryData.addProperty("uuid", npc.getUuid().toString());
+            memoryData.addProperty("role", npc.getRole());
+            if (npc.getOwnerId() != null) {
+                memoryData.addProperty("owner_id", npc.getOwnerId().toString());
+            }
+            memoryData.addProperty("world", npc.getWorld().getRegistryKey().getValue().toString());
+            memoryData.addProperty("x", npc.getX());
+            memoryData.addProperty("y", npc.getY());
+            memoryData.addProperty("z", npc.getZ());
+            memoryData.addProperty("yaw", npc.getYaw());
+            memoryData.addProperty("pitch", npc.getPitch());
+            memoryData.addProperty("health", npc.getHealth());
             
             // Игроки
             JsonObject playersJson = new JsonObject();
@@ -404,6 +418,18 @@ public class NPCMemory {
             
         } catch (IOException | JsonSyntaxException e) {
             IntelligentNPCMod.LOGGER.error("Failed to load memory for NPC {}: {}", npcName, e.getMessage());
+        }
+    }
+
+    public static JsonObject loadNpcData(File memoryFile) {
+        if (!memoryFile.exists()) {
+            return null;
+        }
+        try (FileReader reader = new FileReader(memoryFile, StandardCharsets.UTF_8)) {
+            return new Gson().fromJson(reader, JsonObject.class);
+        } catch (IOException | JsonSyntaxException e) {
+            IntelligentNPCMod.LOGGER.error("Failed to load NPC data from {}: {}", memoryFile.getName(), e.getMessage());
+            return null;
         }
     }
     

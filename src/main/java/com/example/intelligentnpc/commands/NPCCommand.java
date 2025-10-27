@@ -477,89 +477,94 @@ public class NPCCommand {
     private static int createTeam(CommandContext<ServerCommandSource> context) {
         ServerCommandSource source = context.getSource();
         String leaderName = StringArgumentType.getString(context, "leader");
-        
+
         try {
             NPCManager npcManager = IntelligentNPCMod.getInstance().getNpcManager();
             NPCEntity leader = npcManager.getNPCByName(leaderName);
-            
+
             if (leader == null) {
                 source.sendError(Text.literal("§cNPC '" + leaderName + "' не найден"));
                 return 0;
             }
-            
-            if (!leader.getTeamAI().getTeamMembers().isEmpty()) {
+
+            if (leader.getTeamAI().isInTeam()) {
                 source.sendError(Text.literal("§c" + leaderName + " уже в команде"));
                 return 0;
             }
-            
-            // TODO: Реализовать создание команды
-            leader.getTeamAI().setCanLeadTeam(true);
-            
-            source.sendFeedback(() -> Text.literal("§a" + leaderName + " назначен лидером команды"), true);
+
+            leader.getTeamAI().formNewTeam();
+            source.sendFeedback(() -> Text.literal("§a" + leaderName + " создал новую команду"), true);
             return 1;
-            
+
         } catch (Exception e) {
             source.sendError(Text.literal("§cОшибка: " + e.getMessage()));
             return 0;
         }
     }
-    
+
     private static int joinTeam(CommandContext<ServerCommandSource> context) {
         ServerCommandSource source = context.getSource();
         String memberName = StringArgumentType.getString(context, "member");
         String leaderName = StringArgumentType.getString(context, "leader");
-        
+
         try {
             NPCManager npcManager = IntelligentNPCMod.getInstance().getNpcManager();
             NPCEntity member = npcManager.getNPCByName(memberName);
             NPCEntity leader = npcManager.getNPCByName(leaderName);
-            
+
             if (member == null) {
                 source.sendError(Text.literal("§cNPC '" + memberName + "' не найден"));
                 return 0;
             }
-            
+
             if (leader == null) {
                 source.sendError(Text.literal("§cNPC '" + leaderName + "' не найден"));
                 return 0;
             }
-            
-            // Добавление в команду
-            leader.getTeamAI().receiveJoinRequest(member.getUuid());
-            
-            source.sendFeedback(() -> Text.literal(String.format("§a%s присоединился к команде %s", 
-                memberName, leaderName)), true);
-            return 1;
-            
+
+            if (member.getTeamAI().isInTeam()) {
+                source.sendError(Text.literal("§c" + memberName + " уже состоит в команде."));
+                return 0;
+            }
+
+            boolean success = leader.getTeamAI().addMember(member);
+            if (success) {
+                source.sendFeedback(() -> Text.literal(String.format("§a%s присоединился к команде %s",
+                    memberName, leaderName)), true);
+                return 1;
+            } else {
+                source.sendError(Text.literal("§cНе удалось присоединиться к команде. Возможно, она заполнена."));
+                return 0;
+            }
+
         } catch (Exception e) {
             source.sendError(Text.literal("§cОшибка: " + e.getMessage()));
             return 0;
         }
     }
-    
+
     private static int leaveTeam(CommandContext<ServerCommandSource> context) {
         ServerCommandSource source = context.getSource();
         String memberName = StringArgumentType.getString(context, "member");
-        
+
         try {
             NPCManager npcManager = IntelligentNPCMod.getInstance().getNpcManager();
             NPCEntity member = npcManager.getNPCByName(memberName);
-            
+
             if (member == null) {
                 source.sendError(Text.literal("§cNPC '" + memberName + "' не найден"));
                 return 0;
             }
-            
-            if (member.getTeamAI().getTeamMembers().isEmpty()) {
+
+            if (!member.getTeamAI().isInTeam()) {
                 source.sendError(Text.literal("§c" + memberName + " не в команде"));
                 return 0;
             }
-            
-            // TODO: Реализовать выход из команды
-            
+
+            member.getTeamAI().leaveTeam();
             source.sendFeedback(() -> Text.literal("§a" + memberName + " покинул команду"), true);
             return 1;
-            
+
         } catch (Exception e) {
             source.sendError(Text.literal("§cОшибка: " + e.getMessage()));
             return 0;

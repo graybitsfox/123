@@ -366,16 +366,60 @@ public class NPCManager {
     }
     
     public void loadNPCsFromMemory(MinecraftServer server) {
-        // TODO: Реализовать загрузку NPC из файлов памяти при старте сервера
-        // Это включает в себя:
-        // 1. Сканирование директории памяти
-        // 2. Загрузку данных о NPC
-        // 3. Воссоздание NPC в мире
-        // 4. Восстановление позиций и состояний
-        
         IntelligentNPCMod.LOGGER.info("Loading NPCs from memory files...");
-        // Пока что заглушка
-        IntelligentNPCMod.LOGGER.info("NPC loading from memory is not yet implemented");
+        File memoryDir = new File(IntelligentNPCMod.getMemoryDirectory());
+        File[] memoryFiles = memoryDir.listFiles((dir, name) -> name.endsWith(".json"));
+
+        if (memoryFiles == null || memoryFiles.length == 0) {
+            IntelligentNPCMod.LOGGER.info("No NPC memory files found to load.");
+            return;
+        }
+
+        int loadedCount = 0;
+        for (File memoryFile : memoryFiles) {
+            try {
+                com.google.gson.JsonObject npcData = NPCMemory.loadNpcData(memoryFile);
+                if (npcData == null) continue;
+
+                String name = npcData.get("npc_name").getAsString();
+                String role = npcData.get("role").getAsString();
+                UUID ownerId = npcData.has("owner_id") ? UUID.fromString(npcData.get("owner_id").getAsString()) : null;
+
+                Identifier worldId = Identifier.of(npcData.get("world").getAsString());
+                ServerWorld world = server.getWorld(net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.WORLD, worldId));
+
+                if (world == null) {
+                    IntelligentNPCMod.LOGGER.warn("World {} not found for NPC {}, skipping.", worldId, name);
+                    continue;
+                }
+
+                double x = npcData.get("x").getAsDouble();
+                double y = npcData.get("y").getAsDouble();
+                double z = npcData.get("z").getAsDouble();
+                float yaw = npcData.get("yaw").getAsFloat();
+                float pitch = npcData.get("pitch").getAsFloat();
+                float health = npcData.get("health").getAsFloat();
+
+                NPCEntity npc = new NPCEntity(NPC_ENTITY_TYPE, world, name, role, ownerId);
+                npc.setPosition(x, y, z);
+                npc.setYaw(yaw);
+                npc.setPitch(pitch);
+                npc.setHealth(health);
+
+                // Спавн в мире
+                world.spawnEntity(npc);
+
+                // Регистрация в менеджере
+                registerNPC(npc);
+
+                IntelligentNPCMod.LOGGER.info("Loaded NPC '{}' in world '{}' at ({}, {}, {})", name, worldId, x, y, z);
+                loadedCount++;
+
+            } catch (Exception e) {
+                IntelligentNPCMod.LOGGER.error("Failed to load NPC from file {}: {}", memoryFile.getName(), e.getMessage(), e);
+            }
+        }
+        IntelligentNPCMod.LOGGER.info("Finished loading {} NPCs from memory.", loadedCount);
     }
     
     // Статистика и информация

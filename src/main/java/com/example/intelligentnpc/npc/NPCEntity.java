@@ -495,7 +495,7 @@ public class NPCEntity extends PathAwareEntity {
     
     public void saveToMemory() {
         if (memory != null) {
-            memory.saveToFile();
+            memory.saveToFile(this);
         }
     }
     
